@@ -1,25 +1,25 @@
----
-# Slurm config bwuni gpu
-name: "SLURM"   # MUST BE "SLURM"
-partition: "gpu"  # "single" for cpu, "gpu_4" or gpu_8" for gpu
-job-name: "mnist" # this will be the experiment's name in slurm
-num_parallel_jobs: 5  # max number of jobs executed in parallel
-ntasks: 1   #  leave that like it is
-cpus-per-task: 2   # there are 10 cores for each GPU
-mem-per-cpu: 10000  # in MB
-time: 1000   # in minutes
-sbatch_args: # gpus need to be explicitly requested using this
-  gres=gpu:1: ""   #and this
-
----
-name: &name "pronmp_one_digit"
+#---
+## Slurm config bwuni gpu
+#name: "SLURM"   # MUST BE "SLURM"
+#partition: "gpu"  # "single" for cpu, "gpu_4" or gpu_8" for gpu
+#job-name: "mnist" # this will be the experiment's name in slurm
+#num_parallel_jobs: 5  # max number of jobs executed in parallel
+#ntasks: 1   #  leave that like it is
+#cpus-per-task: 2   # there are 10 cores for each GPU
+#mem-per-cpu: 10000  # in MB
+#time: 1000   # in minutes
+#sbatch_args: # gpus need to be explicitly requested using this
+#  gres=gpu:1: ""   #and this
+#
+#---
+name: "prodmp_original_default"
 
 # Required: Can also be set in DEFAULT
 path: /tmp/result/one_digit   # path for saving the results
 repetitions: 1    # number of repeated runs for each parameter combination
 
 # Required for AbstractIterativeExperiments only. Can also be set in DEFAULT
-iterations: 5000  # number of iterations per repetition.
+iterations: 3000  # number of iterations per repetition.
 
 # Optional: Can also be set in DEFAULT
 # Only change these values if you are sure you know what you are doing.
@@ -27,9 +27,9 @@ reps_per_job: 1    # number of repetitions in each job. useful for paralellizati
 reps_in_parallel: 1
 
 wandb:
-  project: *name
+  project: "pronmp_one_digit"
   group: training
-  entity: gelikit
+  entity: upjtr
   log_interval:  &interval 20
   log_model: true
   model_name: test_model_name

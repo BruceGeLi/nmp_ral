@@ -96,7 +96,7 @@ def get_dataset_dir(dataset_name: str) -> str:
     Returns:
         path to the directory storing the dataset
     """
-    return os.path.join(dir_go_up(2), "dataset", dataset_name)
+    return os.path.join(dir_go_up(3), "dataset", dataset_name)
 
 
 def get_media_dir(media_name: str) -> str:
