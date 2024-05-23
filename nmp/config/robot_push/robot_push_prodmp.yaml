@@ -1,37 +1,37 @@
----
-# Slurm config bwuni gpu
-name: "SLURM"   # MUST BE "SLURM"
-partition: "gpu"  # "single" for cpu, "gpu_4" or gpu_8" for gpu
-job-name: "robot_push_prodmp" # this will be the experiment's name in slurm
-num_parallel_jobs: 20  # max number of jobs executed in parallel
-ntasks: 1   #  leave that like it is
-cpus-per-task: 2   # there are 10 cores for each GPU
-mem-per-cpu: 10000  # in MB
-time: 1000   # in minutes
-sbatch_args: # gpus need to be explicitly requested using this
-  gres=gpu:1: ""   #and this
-
-
-
----
-name: &name robot_push_prodmp
+#---
+## Slurm config bwuni gpu
+#name: "SLURM"   # MUST BE "SLURM"
+#partition: "gpu"  # "single" for cpu, "gpu_4" or gpu_8" for gpu
+#job-name: "robot_push_prodmp" # this will be the experiment's name in slurm
+#num_parallel_jobs: 20  # max number of jobs executed in parallel
+#ntasks: 1   #  leave that like it is
+#cpus-per-task: 2   # there are 10 cores for each GPU
+#mem-per-cpu: 10000  # in MB
+#time: 1000   # in minutes
+#sbatch_args: # gpus need to be explicitly requested using this
+#  gres=gpu:1: ""   #and this
+#
+#
+#
+#---
+name: &name robot_push_prodmp_default
 
 # Required: Can also be set in DEFAULT
 path: /tmp/result/robot_push_prodmp   # path for saving the results
 repetitions: 1    # number of repeated runs for each parameter combination
 
 # Required for AbstractIterativeExperiments only. Can also be set in DEFAULT
-iterations: 10000  # number of iterations per repetition.
+iterations: 5000  # number of iterations per repetition.
 
 # Optional: Can also be set in DEFAULT
 # Only change these values if you are sure you know what you are doing.
 reps_per_job: 1    # number of repetitions in each job. useful for paralellization. defaults to 1.
-reps_in_parallel: 20
+reps_in_parallel: 1
 
 wandb:
-  project: robot_push_prodmp
+  project: robot_push
   group: *name
-  entity: gelikit
+  entity: upjtr
   log_interval:  &interval 20
   log_model: true
   model_name: model
