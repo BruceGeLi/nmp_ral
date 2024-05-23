@@ -95,7 +95,7 @@ params:
       validate: 0.2
       test: 0.1
     shuffle_set: True
-    batch_size: 48
+    batch_size: 32
     shuffle_train_loader: True
     transform: null
     time_min: 0
