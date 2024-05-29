@@ -1,0 +1,59 @@
+
+seed: 1234
+
+
+wandb:
+  project: "digit_regression"
+  entity: "upjtr"
+  name: "prodmp"
+  config:
+    log_interval: 1
+
+
+data:
+  data_param:
+    partition:
+      train: 1
+      validate: 0
+      test: 0
+    shuffle_set: False
+    batch_size: 1000
+    shuffle_train_loader: False
+    transform: null
+    time_min: 0
+    time_max: 3
+    save_type: tensor
+    data:
+      images:
+        time_dependent: false
+        normalize: false
+      trajs:
+        time_dependent: true
+      init_x_y_dmp_w_g:
+        time_dependent: false
+
+  datasets:
+    num_0: s_mnist_25_mix_0_only
+    num_1: s_mnist_25_mix_1_only
+    num_2: s_mnist_25_mix_2_only
+    num_3: s_mnist_25_mix_3_only
+    num_4: s_mnist_25_mix_4_only
+    num_5: s_mnist_25_mix_5_only
+    num_6: s_mnist_25_mix_6_only
+    num_7: s_mnist_25_mix_7_only
+    num_8: s_mnist_25_mix_8_only
+    num_9: s_mnist_25_mix_9_only
+
+
+mp:
+  num_dof: 2
+  tau: 3.0
+  mp_type: prodmp
+  mp_args:
+    alpha_phase: 2.0
+    num_basis: 25
+    basis_bandwidth_factor: 2
+    num_basis_outside: 0
+    alpha: 25
+    dt: 0.01
+
