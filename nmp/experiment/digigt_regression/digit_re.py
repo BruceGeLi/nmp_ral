@@ -25,6 +25,7 @@ class OneDigitRegression:
     def run(self):
 
         wandb.init(**self.cfg["wandb"])
+        wandb.config.update(self.cfg)
 
         # res = dict()
         res = Dict()
@@ -37,7 +38,7 @@ class OneDigitRegression:
             # init mp
             mp_cfg = self.cfg["mp"]
             mp_cfg["mp_args"]["num_basis"] = num_basis
-            mp = MPFactory.init_mp(device=self.device, **mp_cfg)
+            mp = MPFactory.init_mp(device=self.device, dtype=torch.float64, **mp_cfg)
 
             # loop over different number
             for key, data_dic in self.cfg["data"]["datasets"].items():
@@ -51,7 +52,8 @@ class OneDigitRegression:
                 for batch in train_loader:
 
                     gt = batch["trajs"]["value"]
-                    mp.learn_mp_params_from_trajs(batch["trajs"]["time"], gt)
+                    mp.learn_mp_params_from_trajs(batch["trajs"]["time"], gt,
+                                                  reg=1e-9)
                     pos = mp.get_traj_pos()
                     loss = mse_loss(pos, gt.to(device=self.device))
                     temp.append(loss)
@@ -63,7 +65,7 @@ class OneDigitRegression:
             total_mean = sum(
                 [value for _, value in res[f"{num_basis}_bases"].items()])/len(res[f"{num_basis}_bases"])
             res[f"{num_basis}_bases"]["total"] = total_mean
-            wandb.log({"num_basis": num_basis})
+            wandb.log({"num_basis": num_basis}, commit=False)
             wandb.log(res[f"{num_basis}_bases"].to_dict())
 
         wandb.finish()
