@@ -1,12 +1,12 @@
 
 seed: 1234
-reg: 0
+reg: 1e-9
 
 wandb:
   project: "digit_regression_exp"
   entity: "upjtr"
-  name: "4bsp_64_cpu"
-#  name: "promp"
+#  name: "4bsp_64_cpu"
+  name: "prodmp_64g_searchb"
   config:
     log_interval: 1
 
@@ -18,7 +18,7 @@ data:
       validate: 0
       test: 0
     shuffle_set: False
-    batch_size: 1000
+    batch_size: 2000
     shuffle_train_loader: False
     transform: null
     time_min: 0
@@ -46,27 +46,27 @@ data:
     num_9: s_mnist_25_mix_9_only
 
 
-mp:
-  num_dof: 2
-  tau: 3.0
-  mp_type: uni_bspline
-#  dtype: torch.float64
-  mp_args:
-    num_basis: 25
-    degree: 4
-    init_condtion_order: 2
-
 #mp:
 #  num_dof: 2
 #  tau: 3.0
-#  mp_type: prodmp
+#  mp_type: uni_bspline
+##  dtype: torch.float64
 #  mp_args:
-#    alpha_phase: 2.0
 #    num_basis: 25
-#    basis_bandwidth_factor: 2
-#    num_basis_outside: 0
-#    alpha: 25
-#    dt: 0.01
+#    degree: 4
+#    init_condtion_order: 2
+
+mp:
+  num_dof: 2
+  tau: 3.0
+  mp_type: prodmp
+  mp_args:
+    alpha_phase: 2.0
+    num_basis: 25
+    basis_bandwidth_factor: 2
+    num_basis_outside: 0
+    alpha: 25
+    dt: 0.01
 
 #mp:
 #  num_dof: 2

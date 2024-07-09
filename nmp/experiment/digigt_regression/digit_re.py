@@ -38,7 +38,6 @@ class OneDigitRegression:
             # init mp
             mp_cfg = self.cfg["mp"]
             mp_cfg["mp_args"]["num_basis"] = num_basis
-            mp = MPFactory.init_mp(device=self.device, dtype=torch.float64, **mp_cfg)
 
             # loop over different number
             for key, data_dic in self.cfg["data"]["datasets"].items():
@@ -49,16 +48,20 @@ class OneDigitRegression:
                     seed=self.cfg["seed"])
 
                 temp = []
-                for batch in train_loader:
+                for bw in torch.linspace(0.5, 4, 36, device=self.device):
+                    for batch in train_loader:
 
-                    gt = batch["trajs"]["value"]
-                    mp.learn_mp_params_from_trajs(batch["trajs"]["time"], gt,
+                        gt = batch["trajs"]["value"]
+                        mp_cfg["mp_args"]["basis_bandwidth_factor"] = bw
+                        mp = MPFactory.init_mp(device=self.device,
+                                           dtype=torch.float64, **mp_cfg)
+                        mp.learn_mp_params_from_trajs(batch["trajs"]["time"], gt,
                                                   reg=1e-9)
-                    pos = mp.get_traj_pos()
-                    loss = mse_loss(pos, gt.to(device=self.device))
-                    temp.append(loss)
-
-                res[f"{num_basis}_bases"][key] = torch.mean(torch.stack(temp)).item()
+                        pos = mp.get_traj_pos()
+                        loss = mse_loss(pos, gt.to(device=self.device))
+                        temp.append(loss)
+                temp = min(temp)
+                res[f"{num_basis}_bases"][key] = temp.item()
 
             # res[f"{num_basis}_bases"]["total"] = torch.mean(
             #     torch.cat([value for _, value in res[f"{num_basis}_bases"]]))
