@@ -48,15 +48,17 @@ class OneDigitRegression:
                     seed=self.cfg["seed"])
 
                 temp = []
-                for bw in torch.linspace(0.5, 4, 36, device=self.device):
+                # for bw in torch.linspace(0.5, 4, 36, device=self.device):
+                for dp in range(4, 8):
                     for batch in train_loader:
-
                         gt = batch["trajs"]["value"]
-                        mp_cfg["mp_args"]["basis_bandwidth_factor"] = bw
+                        # mp_cfg["mp_args"]["basis_bandwidth_factor"] = bw
+                        mp_cfg["mp_args"]["degree_p"] = dp
                         mp = MPFactory.init_mp(device=self.device,
                                            dtype=torch.float64, **mp_cfg)
-                        mp.learn_mp_params_from_trajs(batch["trajs"]["time"], gt,
-                                                  reg=1e-9)
+                        mp.learn_mp_params_from_trajs(torch.as_tensor(batch["trajs"]["time"], dtype=torch.float64, device=self.device),
+                                                      torch.as_tensor(gt, dtype=torch.float64, device=self.device),
+                                                      reg=1e-9)
                         pos = mp.get_traj_pos()
                         loss = mse_loss(pos, gt.to(device=self.device))
                         temp.append(loss)

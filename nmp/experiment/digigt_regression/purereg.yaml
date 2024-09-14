@@ -1,12 +1,14 @@
 
 seed: 1234
 reg: 1e-9
+# gpu
 
 wandb:
   project: "digit_regression_exp"
   entity: "upjtr"
 #  name: "4bsp_64_cpu"
-  name: "prodmp_64g_searchb"
+#  name: "promp_64g_searchb"
+  name: "bsp_stgb_end2"
   config:
     log_interval: 1
 
@@ -46,27 +48,29 @@ data:
     num_9: s_mnist_25_mix_9_only
 
 
-#mp:
-#  num_dof: 2
-#  tau: 3.0
-#  mp_type: uni_bspline
-##  dtype: torch.float64
-#  mp_args:
-#    num_basis: 25
-#    degree: 4
-#    init_condtion_order: 2
-
 mp:
   num_dof: 2
   tau: 3.0
-  mp_type: prodmp
+  mp_type: uni_bspline
+#  dtype: torch.float64
   mp_args:
-    alpha_phase: 2.0
     num_basis: 25
-    basis_bandwidth_factor: 2
-    num_basis_outside: 0
-    alpha: 25
-    dt: 0.01
+    degree_p: 5
+    init_condition_order: 2
+    end_condition_order: 2
+    goal_basis: True
+
+#mp:
+#  num_dof: 2
+#  tau: 3.0
+#  mp_type: prodmp
+#  mp_args:
+#    alpha_phase: 2.0
+#    num_basis: 25
+#    basis_bandwidth_factor: 2
+#    num_basis_outside: 0
+#    alpha: 25
+#    dt: 0.01
 
 #mp:
 #  num_dof: 2
@@ -83,7 +87,7 @@ mp:
 #  num_dof: 2
 #  tau: 3.0
 #  mp_type: promp
-#  dtype: torch.float64
+##  dtype: torch.float64
 #  mp_args:
 #    num_basis: 25
 #    basis_bandwidth_factor: 3
