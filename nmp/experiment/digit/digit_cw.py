@@ -9,6 +9,26 @@ from nmp.experiment.digit.digit import OneDigit
 from nmp.net import avg_batch_loss
 
 
+def set_value_in_nest_dict(config, key, value):
+    """
+    Set value of a certain key in a recursive way in a nested dictionary
+
+    Args:
+        config: configuration dictionary
+        key: key to ref
+        value: value to set
+
+    Returns:
+        config
+    """
+    for k in config.keys():
+        if k == key:
+            config[k] = value
+        if isinstance(config[k], dict):
+            set_value_in_nest_dict(config[k], key, value)
+    return config
+
+
 class OneDigitCW(experiment.AbstractIterativeExperiment):
     def initialize(self, cw_config: dict,
                    rep: int, logger: cw_logging.LoggerArray) -> None:
@@ -60,5 +80,8 @@ class OneDigitCW(experiment.AbstractIterativeExperiment):
 
 if __name__ == "__main__":
     cw = cluster_work.ClusterWork(OneDigitCW)
+    # for rep_config in cw.config.exp_configs:
+    #     set_value_in_nest_dict(rep_config, "seed",
+    #                            rep_config['_rep_idx'])
     cw.add_logger(WandBLogger())
     cw.run()

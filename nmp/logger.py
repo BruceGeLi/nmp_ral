@@ -20,9 +20,13 @@ class WandbLogger:
         self.project_name = config["logger"]["log_name"]
         entity = config["logger"].get("entity")
         group = config["logger"].get("group")
+        # self._initialize_log_dir()
+        # self._run = wandb.init(project=self.project_name, entity=entity,
+        #                        group=group, config=config)
+        run_name = config["logger"].get("run_name")
         self._initialize_log_dir()
         self._run = wandb.init(project=self.project_name, entity=entity,
-                               group=group, config=config)
+                               group=group, config=config, name=run_name)
 
     def _initialize_log_dir(self):
         """

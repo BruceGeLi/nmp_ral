@@ -8,7 +8,7 @@ wandb:
   entity: "upjtr"
 #  name: "4bsp_64_cpu"
 #  name: "promp_64g_searchb"
-  name: "bsp_stgb_end2"
+  name: "bsp_i2e2"
   config:
     log_interval: 1
 
@@ -58,7 +58,7 @@ mp:
     degree_p: 5
     init_condition_order: 2
     end_condition_order: 2
-    goal_basis: True
+#    goal_basis: True
 
 #mp:
 #  num_dof: 2

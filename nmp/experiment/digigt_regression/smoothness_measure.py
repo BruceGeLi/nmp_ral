@@ -38,17 +38,22 @@ def calculate_acceleration_and_jerk(trajectories):
 
     # Append a zero column at the end to maintain the shape
     # Alternatively, you could prepend a zero column
-    acceleration = np.pad(acceleration, ((0, 0), (0, 1)), mode='constant',
-                          constant_values=0)
+    # acceleration = np.pad(acceleration, ((0, 0), (0, 1)), mode='constant',
+    #                       constant_values=0)
 
     # Calculate jerk
     # Using np.diff on the acceleration
     jerk = np.diff(acceleration, n=1, axis=1)
 
     # Append a zero column at the end to maintain the shape
-    jerk = np.pad(jerk, ((0, 0), (0, 1)), mode='constant', constant_values=0)
+    # jerk = np.pad(jerk, ((0, 0), (0, 1)), mode='constant', constant_values=0)
 
-    return acceleration, jerk
+    snap = np.diff(jerk, n=1, axis=1)
+    # snap = np.pad(snap, ((0, 0), (0, 1)), mode='constant', constant_values=0)
+
+    # return acceleration, jerk
+    return jerk, snap
+
 
 def mean_squred_acc_jerk(trajs):
 
@@ -107,6 +112,10 @@ class OneDigitRegression:
             prodmpp_cfg["mp_args"]["num_basis"] = num_basis
             prodmpp = MPFactory.init_mp(device=self.device, **prodmpp_cfg)
 
+            bsp_cfg = self.cfg["bsp"]
+            bsp_cfg["mp_args"]["num_basis"] = num_basis
+            bsp = MPFactory.init_mp(device=self.device, **bsp_cfg)
+
 
 
             # loop over different number
@@ -124,15 +133,20 @@ class OneDigitRegression:
                     prodmp.learn_mp_params_from_trajs(batch["trajs"]["time"], gt)
                     prod = prodmp.get_traj_pos().to("cpu").numpy()
                     prodmpp.learn_mp_params_from_trajs(batch["trajs"]["time"], gt)
-                    prodp = prodmp.get_traj_pos().to("cpu").numpy()
+                    prodp = prodmpp.get_traj_pos().to("cpu").numpy()
+                    bsp.learn_mp_params_from_trajs(batch["trajs"]["time"], gt)
+                    bs = bsp.get_traj_pos().to("cpu").numpy()
+
                     if res.ground_truth.get(key) is None:
                         rs_gt = mean_squred_acc_jerk(gt)
                         res.ground_truth[f"{key}"] = rs_gt
                     rs_prod = mean_squred_acc_jerk(prod)
                     rs_prodp = mean_squred_acc_jerk(prodp)
+                    rs_bs = mean_squred_acc_jerk(bs)
 
                 res[f"{num_basis}_basis"].prodmp[f"{key}"] = rs_prod
                 res[f"{num_basis}_basis"].prodmpp[f"{key}"] = rs_prodp
+                res[f"{num_basis}_basis"].bsp[f"{key}"] = rs_bs
 
             for k, v in res[f"{num_basis}_basis"].items():
                 acc_mean = np.mean([val.acc_mean  for _, val in v.items()])
@@ -154,102 +168,245 @@ class OneDigitRegression:
             res.ground_truth.total.jerk_mean = jerk_mean
             res.ground_truth.total.jerk_var = jerk_var
 
-        fig, axes = plt.subplots(nrows=3, ncols=4, figsize=(15, 10))
-        axes = axes.flatten()
-        for i, numb in enumerate(['num_0', 'num_1', 'num_2', 'num_3', 'num_4',
-                                  'num_5', 'num_6', 'num_7', 'num_8', 'num_9',
-                                  'total']):
+        # fig, axes = plt.subplots(nrows=3, ncols=4, figsize=(15, 10))
+        # axes = axes.flatten()
+        # for i, numb in enumerate(['num_0', 'num_1', 'num_2', 'num_3', 'num_4',
+        #                           'num_5', 'num_6', 'num_7', 'num_8', 'num_9',
+        #                           'total']):
+        #     # ax = axes[i]
+        #     # x_values = [key for key in res.keys() if key != "ground_truth"]
+        #     # x_pos = np.arange(len(x_values))
+        #     # means_prodmp = [nb.prodmp[f"{numb}"].acc_mean for key, nb in res.items() if key != "ground_truth"]
+        #     # std_prodmp = np.sqrt([nb.prodmp[f"{numb}"].acc_var for key, nb in res.items() if key != "ground_truth"])
+        #     # means_prodmpp = [nb.prodmpp[f"{numb}"].acc_mean for key, nb in res.items() if key != "ground_truth"]
+        #     # std_prodmpp = np.sqrt(
+        #     #     [nb.prodmpp[f"{numb}"].acc_var for key, nb in res.items() if key != "ground_truth"])
+        #     #
+        #     # ax.errorbar(x_pos - 0.1, means_prodmp, yerr=std_prodmp, fmt='o',
+        #     #             label='prodmp', color='blue', capsize=5)
+        #     # # ax.errorbar(x_pos, means_prodmp, yerr=std_prodmp, fmt='o',
+        #     # #             label='prodmp', color='blue', capsize=5)
+        #     #
+        #     # ax.errorbar(x_pos + 0.1, means_prodmpp, yerr=std_prodmpp, fmt='s',
+        #     #             label='prodmpp', color='green', capsize=5)
+        #     # # ax.errorbar(x_pos, means_prodmpp, yerr=std_prodmpp, fmt='s',
+        #     # #             label='prodmpp', color='green', capsize=5)
+        #     #
+        #     # gt_mean = res.ground_truth[f"{numb}"].acc_mean
+        #     # gt_std = np.sqrt(res.ground_truth[f"{numb}"].acc_var)
+        #     #
+        #     # mean_line = [gt_mean] * len(x_pos)
+        #     # upper_bound = [gt_mean + gt_std] * len(x_pos)
+        #     # lower_bound = [gt_mean - gt_std] * len(x_pos)
+        #     #
+        #     # ax.plot(x_pos, mean_line, label='ground_truth', color='red',
+        #     #         linestyle='--')
+        #     # ax.fill_between(x_pos, lower_bound, upper_bound, color='red',
+        #     #                 alpha=0.2,)
+        #     #
+        #     # # Adding labels and title
+        #     #
+        #     # ax.set_xticks(x_pos)
+        #     # ax.set_xticklabels(x_values, rotation=45)
+        #     # ax.set_xlabel('num_basis')
+        #     # ax.set_ylabel('smoothness index')
+        #     # ax.set_title(numb)
+        #     # ax.legend()
+        #
+        #
+        #     ax = axes[i]
+        #     x_values = [key for key in res.keys() if key != "ground_truth"]
+        #     x_pos = np.arange(len(x_values))
+        #     means_prodmp = [nb.prodmp[f"{numb}"].jerk_mean for key, nb in
+        #                     res.items() if key != "ground_truth"]
+        #     std_prodmp = np.sqrt(
+        #         [nb.prodmp[f"{numb}"].jerk_var for key, nb in res.items() if
+        #          key != "ground_truth"])
+        #     means_prodmpp = [nb.prodmpp[f"{numb}"].jerk_mean for key, nb in
+        #                      res.items() if key != "ground_truth"]
+        #     std_prodmpp = np.sqrt(
+        #         [nb.prodmpp[f"{numb}"].jerk_var for key, nb in res.items() if
+        #          key != "ground_truth"])
+        #
+        #     means_bsp = [nb.bsp[f"{numb}"].jerk_mean for key, nb in
+        #                      res.items() if key != "ground_truth"]
+        #     std_bsp = np.sqrt(
+        #         [nb.bsp[f"{numb}"].jerk_var for key, nb in res.items() if
+        #          key != "ground_truth"])
+        #
+        #     ax.errorbar(x_pos - 0.1, means_prodmp, yerr=std_prodmp, fmt='o',
+        #                 label='prodmp', color='blue', capsize=5)
+        #     # ax.errorbar(x_pos, means_prodmp, yerr=std_prodmp, fmt='o',
+        #     #             label='prodmp', color='blue', capsize=5)
+        #
+        #     ax.errorbar(x_pos + 0.1, means_prodmpp, yerr=std_prodmpp, fmt='s',
+        #                 label='prodmp+', color='green', capsize=5)
+        #     # ax.errorbar(x_pos, means_prodmpp, yerr=std_prodmpp, fmt='s',
+        #     #             label='prodmpp', color='green', capsize=5)
+        #
+        #     ax.errorbar(x_pos , means_bsp, yerr=std_bsp, fmt='d',
+        #                 label='b-spline', color='yellow', capsize=5)
+        #
+        #     gt_mean = res.ground_truth[f"{numb}"].jerk_mean
+        #     gt_std = np.sqrt(res.ground_truth[f"{numb}"].jerk_var)
+        #
+        #     mean_line = [gt_mean] * len(x_pos)
+        #     upper_bound = [gt_mean + gt_std] * len(x_pos)
+        #     lower_bound = [gt_mean - gt_std] * len(x_pos)
+        #
+        #     ax.plot(x_pos, mean_line, label='ground_truth', color='red',
+        #             linestyle='--')
+        #     ax.fill_between(x_pos, lower_bound, upper_bound, color='red',
+        #                     alpha=0.2, )
+        #
+        #     # Adding labels and title
+        #
+        #     ax.set_xticks(x_pos)
+        #     ax.set_xticklabels(x_values, rotation=45)
+        #     ax.set_xlabel('num_basis')
+        #     ax.set_ylabel('jerk')
+        #     ax.set_title(numb)
+        #     ax.legend()
+        #
+        #
+        # for j in range(11, len(axes)):
+        #     fig.delaxes(axes[j])
+        # plt.tight_layout()
+        # plt.show()
+
+        fig, ax = plt.subplots()
+        # axes = axes.flatten()
+        numb = "total"
+        # for i, numb in enumerate(['num_0', 'num_1', 'num_2', 'num_3', 'num_4',
+        #                           'num_5', 'num_6', 'num_7', 'num_8', 'num_9',
+        #                           'total']):
+
+
             # ax = axes[i]
-            # x_values = [key for key in res.keys() if key != "ground_truth"]
-            # x_pos = np.arange(len(x_values))
-            # means_prodmp = [nb.prodmp[f"{numb}"].acc_mean for key, nb in res.items() if key != "ground_truth"]
-            # std_prodmp = np.sqrt([nb.prodmp[f"{numb}"].acc_var for key, nb in res.items() if key != "ground_truth"])
-            # means_prodmpp = [nb.prodmpp[f"{numb}"].acc_mean for key, nb in res.items() if key != "ground_truth"]
-            # std_prodmpp = np.sqrt(
-            #     [nb.prodmpp[f"{numb}"].acc_var for key, nb in res.items() if key != "ground_truth"])
-            #
-            # ax.errorbar(x_pos - 0.1, means_prodmp, yerr=std_prodmp, fmt='o',
-            #             label='prodmp', color='blue', capsize=5)
-            # # ax.errorbar(x_pos, means_prodmp, yerr=std_prodmp, fmt='o',
-            # #             label='prodmp', color='blue', capsize=5)
-            #
-            # ax.errorbar(x_pos + 0.1, means_prodmpp, yerr=std_prodmpp, fmt='s',
-            #             label='prodmpp', color='green', capsize=5)
-            # # ax.errorbar(x_pos, means_prodmpp, yerr=std_prodmpp, fmt='s',
-            # #             label='prodmpp', color='green', capsize=5)
-            #
-            # gt_mean = res.ground_truth[f"{numb}"].acc_mean
-            # gt_std = np.sqrt(res.ground_truth[f"{numb}"].acc_var)
-            #
-            # mean_line = [gt_mean] * len(x_pos)
-            # upper_bound = [gt_mean + gt_std] * len(x_pos)
-            # lower_bound = [gt_mean - gt_std] * len(x_pos)
-            #
-            # ax.plot(x_pos, mean_line, label='ground_truth', color='red',
-            #         linestyle='--')
-            # ax.fill_between(x_pos, lower_bound, upper_bound, color='red',
-            #                 alpha=0.2,)
-            #
-            # # Adding labels and title
-            #
-            # ax.set_xticks(x_pos)
-            # ax.set_xticklabels(x_values, rotation=45)
-            # ax.set_xlabel('num_basis')
-            # ax.set_ylabel('smoothness index')
-            # ax.set_title(numb)
-            # ax.legend()
+        x_values = [key for key in res.keys() if key != "ground_truth"]
+        x_pos = np.arange(len(x_values))
+        means_prodmp = [nb.prodmp[f"{numb}"].jerk_mean for key, nb in
+                        res.items() if key != "ground_truth"]
+        std_prodmp = np.sqrt(
+            [nb.prodmp[f"{numb}"].jerk_var for key, nb in res.items() if
+             key != "ground_truth"])
+        means_prodmpp = [nb.prodmpp[f"{numb}"].jerk_mean for key, nb in
+                         res.items() if key != "ground_truth"]
+        std_prodmpp = np.sqrt(
+            [nb.prodmpp[f"{numb}"].jerk_var for key, nb in res.items() if
+             key != "ground_truth"])
 
+        means_bsp = [nb.bsp[f"{numb}"].jerk_mean for key, nb in
+                         res.items() if key != "ground_truth"]
+        std_bsp = np.sqrt(
+            [nb.bsp[f"{numb}"].jerk_var for key, nb in res.items() if
+             key != "ground_truth"])
 
-            ax = axes[i]
-            x_values = [key for key in res.keys() if key != "ground_truth"]
-            x_pos = np.arange(len(x_values))
-            means_prodmp = [nb.prodmp[f"{numb}"].jerk_mean for key, nb in
-                            res.items() if key != "ground_truth"]
-            std_prodmp = np.sqrt(
-                [nb.prodmp[f"{numb}"].jerk_var for key, nb in res.items() if
-                 key != "ground_truth"])
-            means_prodmpp = [nb.prodmpp[f"{numb}"].jerk_mean for key, nb in
-                             res.items() if key != "ground_truth"]
-            std_prodmpp = np.sqrt(
-                [nb.prodmpp[f"{numb}"].jerk_var for key, nb in res.items() if
-                 key != "ground_truth"])
-
-            ax.errorbar(x_pos - 0.1, means_prodmp, yerr=std_prodmp, fmt='o',
-                        label='prodmp', color='blue', capsize=5)
+        ax.errorbar(x_pos - 0.1, means_prodmp, yerr=std_prodmp, fmt='o',
+                        label='prodmp', color='g', capsize=5)
             # ax.errorbar(x_pos, means_prodmp, yerr=std_prodmp, fmt='o',
             #             label='prodmp', color='blue', capsize=5)
 
-            ax.errorbar(x_pos + 0.1, means_prodmpp, yerr=std_prodmpp, fmt='s',
-                        label='prodmpp', color='green', capsize=5)
+        ax.errorbar(x_pos + 0.1, means_prodmpp, yerr=std_prodmpp, fmt='s',
+                        label='prodmp+', color='b', capsize=5)
             # ax.errorbar(x_pos, means_prodmpp, yerr=std_prodmpp, fmt='s',
             #             label='prodmpp', color='green', capsize=5)
 
-            # gt_mean = res.ground_truth[f"{numb}"].jerk_mean
-            # gt_std = np.sqrt(res.ground_truth[f"{numb}"].jerk_var)
-            #
-            # mean_line = [gt_mean] * len(x_pos)
-            # upper_bound = [gt_mean + gt_std] * len(x_pos)
-            # lower_bound = [gt_mean - gt_std] * len(x_pos)
-            #
-            # ax.plot(x_pos, mean_line, label='ground_truth', color='red',
-            #         linestyle='--')
-            # ax.fill_between(x_pos, lower_bound, upper_bound, color='red',
-            #                 alpha=0.2, )
+        ax.errorbar(x_pos , means_bsp, yerr=std_bsp, fmt='d',
+                        label='b-splinemp', color='r', capsize=5)
+
+        gt_mean = res.ground_truth[f"{numb}"].jerk_mean
+        gt_std = np.sqrt(res.ground_truth[f"{numb}"].jerk_var)
+
+        mean_line = [gt_mean] * len(x_pos)
+        upper_bound = [gt_mean + gt_std] * len(x_pos)
+        lower_bound = [gt_mean - gt_std] * len(x_pos)
+
+        ax.plot(x_pos, mean_line, label='ground_truth', color='k',
+                    linestyle='--')
+        ax.fill_between(x_pos, lower_bound, upper_bound, color='k',
+                            alpha=0.1, )
 
             # Adding labels and title
 
-            ax.set_xticks(x_pos)
-            ax.set_xticklabels(x_values, rotation=45)
-            ax.set_xlabel('num_basis')
-            ax.set_ylabel('jerk')
-            ax.set_title(numb)
-            ax.legend()
+        ax.set_xticks(x_pos)
+        xa = [i for i in range(10,26)]
+        # ax.set_xticklabels(x_values, rotation=45)
+        ax.set_xticklabels(xa)
+        ax.set_xlabel('num_basis')
+        ax.set_ylabel('mean squared snap')
+        ax.set_title("mean squared snap among all digits")
+        ax.legend()
 
-
-        for j in range(11, len(axes)):
-            fig.delaxes(axes[j])
         plt.tight_layout()
         plt.show()
+
+        # fig, ax = plt.subplots()
+        # # axes = axes.flatten()
+        # numb = "total"
+        # # for i, numb in enumerate(['num_0', 'num_1', 'num_2', 'num_3', 'num_4',
+        # #                           'num_5', 'num_6', 'num_7', 'num_8', 'num_9',
+        # #                           'total']):
+        #
+        # # ax = axes[i]
+        # x_values = [key for key in res.keys() if key != "ground_truth"]
+        # x_pos = np.arange(len(x_values))
+        # means_prodmp = [nb.prodmp[f"{numb}"].acc_mean for key, nb in
+        #                 res.items() if key != "ground_truth"]
+        # std_prodmp = np.sqrt(
+        #     [nb.prodmp[f"{numb}"].acc_var for key, nb in res.items() if
+        #      key != "ground_truth"])
+        # means_prodmpp = [nb.prodmpp[f"{numb}"].acc_mean for key, nb in
+        #                  res.items() if key != "ground_truth"]
+        # std_prodmpp = np.sqrt(
+        #     [nb.prodmpp[f"{numb}"].acc_var for key, nb in res.items() if
+        #      key != "ground_truth"])
+        #
+        # means_bsp = [nb.bsp[f"{numb}"].acc_mean for key, nb in
+        #              res.items() if key != "ground_truth"]
+        # std_bsp = np.sqrt(
+        #     [nb.bsp[f"{numb}"].acc_var for key, nb in res.items() if
+        #      key != "ground_truth"])
+        #
+        # ax.errorbar(x_pos - 0.1, means_prodmp, yerr=std_prodmp, fmt='o',
+        #             label='prodmp', color='g', capsize=5)
+        # # ax.errorbar(x_pos, means_prodmp, yerr=std_prodmp, fmt='o',
+        # #             label='prodmp', color='blue', capsize=5)
+        #
+        # ax.errorbar(x_pos + 0.1, means_prodmpp, yerr=std_prodmpp, fmt='s',
+        #             label='prodmp+', color='b', capsize=5)
+        # # ax.errorbar(x_pos, means_prodmpp, yerr=std_prodmpp, fmt='s',
+        # #             label='prodmpp', color='green', capsize=5)
+        #
+        # ax.errorbar(x_pos, means_bsp, yerr=std_bsp, fmt='d',
+        #             label='b-splinemp', color='r', capsize=5)
+        #
+        # gt_mean = res.ground_truth[f"{numb}"].acc_mean
+        # gt_std = np.sqrt(res.ground_truth[f"{numb}"].acc_var)
+        #
+        # mean_line = [gt_mean] * len(x_pos)
+        # upper_bound = [gt_mean + gt_std] * len(x_pos)
+        # lower_bound = [gt_mean - gt_std] * len(x_pos)
+        #
+        # ax.plot(x_pos, mean_line, label='ground_truth', color='k',
+        #         linestyle='--')
+        # ax.fill_between(x_pos, lower_bound, upper_bound, color='k',
+        #                 alpha=0.1, )
+        #
+        # # Adding labels and title
+        #
+        # ax.set_xticks(x_pos)
+        # xa = [i for i in range(10,26)]
+        # # ax.set_xticklabels(x_values, rotation=45)
+        # ax.set_xticklabels(xa)
+        # ax.set_xlabel('num_basis')
+        # ax.set_ylabel('mean squared jerk')
+        # ax.set_title("mean squared jerk among all digits")
+        # ax.legend()
+        #
+        # plt.tight_layout()
+        # plt.show()
+
 
 
 

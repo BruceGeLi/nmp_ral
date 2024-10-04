@@ -1,4 +1,4 @@
----
+#---
 ## Slurm config bwuni gpu
 #name: "SLURM"   # MUST BE "SLURM"
 #partition: "gpu"  # "single" for cpu, "gpu_4" or gpu_8" for gpu
@@ -10,49 +10,21 @@
 #time: 1000   # in minutes
 #sbatch_args: # gpus need to be explicitly requested using this
 #  gres=gpu:1: ""   #and this
-
-#name: "SLURM"
-#partition: "gpu_4"
-#job-name: "digit_prodmpp"
-#num_parallel_jobs: 120
-#ntasks: 1
-#cpus-per-task: 30
-#time: 1000
-#gpus_per_rep: 1
-#scheduler: horeka
-#sbatch_args:
-#  gres: "gpu:4"
-
-
-#name: "SLURM"
-#partition: "single"
-##partition: "multiple_il"
-##nodes: 2
-#job-name: "pro+_digit"
-#num_parallel_jobs: 0
-#cpus-per-task: 36
-#time: 4320
-#cpus_per_rep: 9
-#ntasks: 1
-#scheduler: cpu_distribute
-
+#
 #---
-name: "bsp_1iter"
+name: "bsp_mse"
 
 # Required: Can also be set in DEFAULT
-path: /tmp/result/one_digit/   # path for saving the results
+path: /tmp/result/one_digit   # path for saving the results
 repetitions: 1    # number of repeated runs for each parameter combination
-#repetitions: 4    # Number of repetitions, each with different random seed, 4 for test, 20 for paper
-#reps_per_job: 4
-#reps_in_parallel: 4
 
 # Required for AbstractIterativeExperiments only. Can also be set in DEFAULT
-iterations: 5000  # number of iterations per repetition.
+iterations: 3000  # number of iterations per repetition.
 
 # Optional: Can also be set in DEFAULT
 # Only change these values if you are sure you know what you are doing.
-#reps_per_job: 1    # number of repetitions in each job. useful for paralellization. defaults to 1.
-#reps_in_parallel: 1
+reps_per_job: 1    # number of repetitions in each job. useful for paralellization. defaults to 1.
+reps_in_parallel: 1
 
 wandb:
   project: "pronmp_one_digit"
@@ -70,7 +42,6 @@ params:
   vali_log_interval: *interval
   save_model_interval: 200
   seed: 1234
-#  seed: auto
   max_norm: 25
 
   encoders:
@@ -123,7 +94,7 @@ params:
       act_func: *act_func
 
   dataset:
-    name: s_mnist_25_new_bsp
+    name: s_mnist_25_new
     partition:
       train: 0.7
       validate: 0.15
@@ -147,14 +118,18 @@ params:
 #  mp:
 #    num_dof: 2
 #    tau: 3.0
-#    mp_type: prodmp
+#    mp_type: prodmp+
 #    mp_args:
-#      alpha_phase: 2.0
+#      order: 2
 #      num_basis: 25
-#      basis_bandwidth_factor: 2
+#      basis_bandwidth_factor: 1.7
 #      num_basis_outside: 0
 #      alpha: 25
-#      dt: 0.01
+#  assign_config:
+#    num_ctx: 0
+#    num_select: 10
+#    num_all: 301
+
 
   mp:
     num_dof: 2
@@ -168,19 +143,3 @@ params:
     num_ctx: 0
     num_select: 10
     num_all: 301
-
-
-#  mp:
-#    num_dof: 2
-#    tau: 3.0
-#    mp_type: prodmp+
-#    mp_args:
-#      order: 2
-#      num_basis: 25
-#      basis_bandwidth_factor: 1.7
-#      num_basis_outside: 0
-#      alpha: 25
-#  assign_config:
-#    num_ctx: 0
-#    num_select: 10
-#    num_all: 301

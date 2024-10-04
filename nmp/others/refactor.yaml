@@ -1,0 +1,23 @@
+dataset: s_mnist_25_new_+
+
+mp:
+  num_dof: 2
+  tau: 3.0
+  mp_type: prodmp+
+  mp_args:
+    order: 2
+    num_basis: 25
+    basis_bandwidth_factor: 1.7
+    num_basis_outside: 0
+    alpha: 25
+
+#mp:
+#  num_dof: 2
+#  tau: 3.0
+#  mp_type: uni_bspline
+#  mp_args:
+#    num_basis: 26
+#    degree_p: 4
+#    init_condition_order: 2
+##    end_condition_order: 2
+##    goal_basis: True

@@ -28,6 +28,7 @@ class OneDigitPostProcess:
         config_path = util.join_path(model_dir, "config.yaml")
         cfg = util.parse_config(config_path)
         cfg = Dict(cfg)
+        cfg.dataset.batch_size = 128
         cfg.assign_config.num_select = None
         self.exp = OneDigit(cfg)
 
@@ -40,7 +41,7 @@ class OneDigitPostProcess:
 
 @torch.no_grad()
 def mnist_post_processing(exp, logger):
-    use_test_data_list = torch.linspace(0, 9, 10).long()
+    use_test_data_list = torch.linspace(10, 19, 10).long()
     batch = None
     for test_batch in exp.test_loader:
         batch = test_batch
@@ -134,11 +135,12 @@ def mean_plot(images, traj_x_y, pred_dmp_traj):
 
         # plt.imshow(images[i].cpu().numpy(),
         #            extent=[0, img_size, img_size, 0])
-        plt.plot(x[i], y[i], 'k', label="ground_truth")
-        plt.plot(pred_dmp_x[i], pred_dmp_y[i], 'g--', label="pred_dmp")
+        plt.plot(x[i], y[i], 'k', label="ground_truth", linewidth=10.0)
+        plt.plot(pred_dmp_x[i], pred_dmp_y[i], 'b--', label="B-spline", linewidth=10.0)
+        plt.gca().invert_yaxis()
         # plt.gca().axis("off")
     # plt.show()
-    util.savefig(fig, "digits", "pdf", overwrite=True)
+    util.savefig(fig, "digits", "png", overwrite=True)
     return fig
 
 
@@ -155,15 +157,15 @@ def sample_plot(images, samples):
                  linewidth=2,
                  label="pred_dmp_sample")
         plt.gca().invert_yaxis()
-        plt.gca().axis("off")
+        # plt.gca().axis("off")
 
         ##### save 3 or 8
-        if i == 8:
+        if i == 3:
             fig = plt.figure(figsize=(3,5), dpi=200, tight_layout=True)
             plt.plot(samples[i, :5, :, 0].T, samples[i, :5, :, 1].T, linewidth=3.0)
             # plt.plot(pred_dmp_x[i], pred_dmp_y[i], 'b', linewidth=3.0)
             # plt.plot(mean_x[idx], mean_y[idx], 'r--', linewidth=3.0)
-            plt.axis('off')
+            # plt.axis('off')
             # eight
             # plt.xlim([12.5,27.5])
             # plt.ylim([11.5,36.5])
@@ -172,7 +174,7 @@ def sample_plot(images, samples):
             # plt.ylim([7.5,32.5])
 
             plt.gca().invert_yaxis()
-            util.savefig(fig, "eight_digit", "pdf", overwrite=True)
+            util.savefig(fig, "eight_digit", "png", overwrite=True)
 
             exit()
 
@@ -190,8 +192,8 @@ if __name__ == "__main__":
     logger_config.logger.log_name = "pronmp_one_digit"
     logger_config.logger.entity = "upjtr"
     logger_config.logger.group = "testing"
-    logger_config.logger.run_name = "show_plot__prodmp+_25_nll"
+    logger_config.logger.run_name = "show_plot_bsp_25_nll_test"
     wb_logger = WandbLogger(logger_config.to_dict())
-    model_api = "artifact = run.use_artifact('upjtr/pronmp_one_digit/test_model_name:v11', type='model')"
-    epoch = 1600
+    model_api = "artifact = run.use_artifact('upjtr/pronmp_one_digit/test_model_name:v16', type='model')"
+    epoch = 5000
     OneDigitPostProcess(wb_logger, model_api, epoch).test()
