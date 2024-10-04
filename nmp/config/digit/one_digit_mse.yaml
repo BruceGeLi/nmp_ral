@@ -1,21 +1,22 @@
-#---
-## Slurm config bwuni gpu
-#name: "SLURM"   # MUST BE "SLURM"
-#partition: "gpu"  # "single" for cpu, "gpu_4" or gpu_8" for gpu
-#job-name: "mnist" # this will be the experiment's name in slurm
-#num_parallel_jobs: 5  # max number of jobs executed in parallel
-#ntasks: 1   #  leave that like it is
-#cpus-per-task: 2   # there are 10 cores for each GPU
-#mem-per-cpu: 10000  # in MB
-#time: 1000   # in minutes
-#sbatch_args: # gpus need to be explicitly requested using this
-#  gres=gpu:1: ""   #and this
-#
-#---
+---
+# Slurm config bwuni gpu
+name: "SLURM"   # MUST BE "SLURM"
+partition: "gpu"  # "single" for cpu, "gpu_4" or gpu_8" for gpu
+job-name: "mnist" # this will be the experiment's name in slurm
+num_parallel_jobs: 0  # max number of jobs executed in parallel
+ntasks: 1   #  leave that like it is
+cpus-per-task: 2   # there are 10 cores for each GPU
+mem-per-cpu: 5000  # in MB
+time: 1000   # in minutes
+sbatch_args: # gpus need to be explicitly requested using this
+  gres: "gpu:1"   #and this.
+  exclude: "node[3-7]"
+
+---
 name: "bsp_mse"
 
 # Required: Can also be set in DEFAULT
-path: /tmp/result/one_digit   # path for saving the results
+path: ./tmp/result/one_digit   # path for saving the results
 repetitions: 1    # number of repeated runs for each parameter combination
 
 # Required for AbstractIterativeExperiments only. Can also be set in DEFAULT
@@ -27,9 +28,9 @@ reps_per_job: 1    # number of repetitions in each job. useful for paralellizati
 reps_in_parallel: 1
 
 wandb:
-  project: "pronmp_one_digit"
+  project: "bmp_one_digit"
   group: training
-  entity: upjtr
+  entity: gelikit
   log_interval:  &interval 20
   log_model: true
   model_name: test_model_name
